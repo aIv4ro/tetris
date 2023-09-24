@@ -1,11 +1,15 @@
 import { boardHeight, boardWidth, shapes } from '../constants/constants'
 import { type Board, type Piece } from '../types/types'
 
+const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+
 export const getRandomPiece = (): Piece => {
+  const shape = shapes[Math.floor(Math.random() * shapes.length)]
+  const x = getRandomInt(0, boardWidth - shape[0].length)
   return {
-    x: Math.floor(boardWidth / 2),
+    x,
     y: 0,
-    shape: shapes[Math.floor(Math.random() * shapes.length)]
+    shape
   }
 }
 
