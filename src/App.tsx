@@ -5,12 +5,11 @@ import { useTetris } from './hooks/useTetris'
 function App () {
   const {
     board,
-    isOver,
     score,
     level,
-    isPaused,
+    state,
     restartGame,
-    toggleIsPaused
+    togglePause
   } = useTetris()
 
   return (
@@ -20,8 +19,8 @@ function App () {
           <div className='flex-col'>
             <header className='flex flex-col'>
               <h1 className='text-xl text-center font-semibold'>Tetris</h1>
-              <button onClick={toggleIsPaused}>
-                {isPaused ? 'Resume' : 'Stop'}
+              <button onClick={togglePause}>
+                {state === 'playing' ? 'Stop' : 'Resume'}
               </button>
             </header>
             <div className='grid mt-3' style={{
@@ -46,9 +45,13 @@ function App () {
           </div>
         </div>
       </main>
-      {isOver && <div className='absolute inset-0 grid place-content-center bg-zinc-800/70'>
+      {state === 'over' && <div className='absolute inset-0 grid place-content-center bg-zinc-800/70'>
         <h4 className='text-lg text-center font-semibold'>Game over</h4>
         <button onClick={restartGame} className='px-3 bg-slate-200 rounded'>Restart game</button>
+      </div>}
+      {state === 'not-started' && <div className='absolute inset-0 grid place-content-center bg-zinc-800/70'>
+        <h4 className='text-lg text-center font-semibold'>Welcome to the tetris</h4>
+        <button onClick={restartGame} className='px-3 bg-slate-200 rounded'>Start game</button>
       </div>}
     </>
   )

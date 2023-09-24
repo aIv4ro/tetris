@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { type Board, type Move, type Piece } from '../types/types'
+import { type State, type Board, type Move, type Piece } from '../types/types'
 import { getInitialBoard, getRandomPiece, solidifyPiece, updatePieceInBoard, willCollide } from '../utils/utils'
 import { boardWidth } from '../constants/constants'
 
@@ -8,11 +8,12 @@ const initialBoard = getInitialBoard()
 
 export function useTetris () {
   const [board, setBoard] = useState(initialBoard)
-  const [isPaused, setIsPaused] = useState(true)
+  const [state, setState] = useState<State>('not-started')
   const [piece, setPiece] = useState<Piece | null>(initialPiece)
   const [score, setScore] = useState(0)
   const moveCbRef = useRef<((move: Move) => void) | null>(null)
   const level = Math.max(1, Math.floor(score / (40 * 4)))
+
   const move = useCallback((move: Move) => {
     if (piece == null) return
     const { dir } = move
@@ -48,9 +49,10 @@ export function useTetris () {
         const nextPiece = getRandomPiece()
         updatePieceInBoard({ piece: nextPiece, board: newBoard })
         if (willCollide({ piece: nextPiece, board })) {
-        // gameOver
+          // gameOver
           solidifyPiece({ board: newBoard })
           setPiece(null)
+          setState('over')
         } else {
           setPiece(nextPiece)
         }
@@ -68,7 +70,7 @@ export function useTetris () {
   moveCbRef.current = move
 
   useEffect(() => {
-    if (isPaused) return
+    if (state !== 'playing') return
     function onTick () {
       moveCbRef.current?.({ dir: 'down', steps: 1 })
     }
@@ -84,16 +86,22 @@ export function useTetris () {
       clearInterval(tickId)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [level, isPaused])
+  }, [level, state])
 
   function restartGame () {
     setBoard(getInitialBoard())
     setPiece(getRandomPiece())
+    setScore(0)
+    setState('playing')
   }
 
-  function toggleIsPaused () {
-    setIsPaused(prev => !prev)
+  function togglePause () {
+    setState(prev => {
+      if (prev === 'pause' || prev === 'not-started') return 'playing'
+      if (prev === 'playing') return 'pause'
+      return prev
+    })
   }
 
-  return { board, isOver: piece == null, score, level, isPaused, restartGame, toggleIsPaused }
+  return { board, score, level, state, restartGame, togglePause }
 }
