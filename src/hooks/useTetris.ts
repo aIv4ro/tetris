@@ -9,6 +9,7 @@ const initialBoard = getInitialBoard()
 export function useTetris () {
   const [board, setBoard] = useState(initialBoard)
   const [piece, setPiece] = useState<Piece | null>(initialPiece)
+  const [score, setScore] = useState(0)
   const moveCbRef = useRef<((move: Move) => void) | null>(null)
 
   const move = useCallback((move: Move) => {
@@ -29,26 +30,31 @@ export function useTetris () {
         y: dir === 'down' ? piece.y + move.steps * multiplier : piece.y
       }
     }
-    if (willCollide({ piece: newPiece, board }) && dir === 'down') {
-      const newBoard: Board = board.map(row => row.map(cell => cell))
-      solidifyPiece({ board: newBoard })
-      for (let i = 0; i < newBoard.length; i++) {
-        const row = newBoard[i]
-        if (row.every(cell => cell === 1)) {
-          newBoard.splice(i, 1)
-          newBoard.unshift(Array(boardWidth).fill(0))
-        }
-      }
-      const nextPiece = getRandomPiece()
-      updatePieceInBoard({ piece: nextPiece, board: newBoard })
-      if (willCollide({ piece: nextPiece, board })) {
-        // gameOver
+    if (willCollide({ piece: newPiece, board })) {
+      if (dir === 'down') {
+        const newBoard: Board = board.map(row => row.map(cell => cell))
         solidifyPiece({ board: newBoard })
-        setPiece(null)
-      } else {
-        setPiece(nextPiece)
+        let deletedRows = 0
+        for (let i = 0; i < newBoard.length; i++) {
+          const row = newBoard[i]
+          if (row.every(cell => cell === 1)) {
+            deletedRows++
+            newBoard.splice(i, 1)
+            newBoard.unshift(Array(boardWidth).fill(0))
+          }
+        }
+        setScore(prev => prev + deletedRows * 40)
+        const nextPiece = getRandomPiece()
+        updatePieceInBoard({ piece: nextPiece, board: newBoard })
+        if (willCollide({ piece: nextPiece, board })) {
+        // gameOver
+          solidifyPiece({ board: newBoard })
+          setPiece(null)
+        } else {
+          setPiece(nextPiece)
+        }
+        setBoard(newBoard)
       }
-      setBoard(newBoard)
     } else {
       setPiece(newPiece)
       setBoard(prev => {
@@ -83,5 +89,5 @@ export function useTetris () {
     setPiece(getRandomPiece())
   }
 
-  return { board, isOver: piece == null, restartGame }
+  return { board, isOver: piece == null, restartGame, score }
 }
