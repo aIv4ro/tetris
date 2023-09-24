@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type State, type Board, type Move, type Piece } from '../types/types'
-import { getInitialBoard, getRandomPiece, solidifyPiece, updatePieceInBoard, willCollide } from '../utils/utils'
+import { getInitialBoard, getRandomPiece, rotateShape, solidifyPiece, updatePieceInBoard, willCollide } from '../utils/utils'
 import { boardWidth } from '../constants/constants'
 
 const initialPiece = getRandomPiece()
@@ -20,7 +20,7 @@ export function useTetris () {
     const multiplier = dir === 'left' ? -1 : 1
     let newPiece: Piece
     if (dir === 'rotate') {
-      const newShape = piece.shape[0].map((_, index) => piece.shape.map(row => row[index]).reverse())
+      const newShape = rotateShape({ shape: piece.shape, steps: 1 })
       newPiece = {
         ...piece,
         shape: newShape
@@ -45,7 +45,7 @@ export function useTetris () {
             newBoard.unshift(Array(boardWidth).fill(0))
           }
         }
-        setScore(prev => prev + deletedRows * 40)
+        if (deletedRows !== 0) setScore(prev => prev + deletedRows * 40)
         const nextPiece = getRandomPiece()
         updatePieceInBoard({ piece: nextPiece, board: newBoard })
         if (willCollide({ piece: nextPiece, board })) {
@@ -60,10 +60,8 @@ export function useTetris () {
       }
     } else {
       setPiece(newPiece)
-      setBoard(prev => {
-        const boardCopy: Board = prev.map(row => row.map(cell => cell === 2 ? 0 : cell))
-        return updatePieceInBoard({ piece: newPiece, board: boardCopy })
-      })
+      const boardCopy: Board = board.map(row => row.map(cell => cell === 2 ? 0 : cell))
+      setBoard(updatePieceInBoard({ piece: newPiece, board: boardCopy }))
     }
   }, [piece, board])
 

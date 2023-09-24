@@ -1,10 +1,13 @@
 import { boardHeight, boardWidth, shapes } from '../constants/constants'
-import { type Board, type Piece } from '../types/types'
+import { type Shape, type Board, type Piece } from '../types/types'
 
 const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
 
 export const getRandomPiece = (): Piece => {
-  const shape = shapes[Math.floor(Math.random() * shapes.length)]
+  const shape = rotateShape({
+    shape: shapes[Math.floor(Math.random() * shapes.length)],
+    steps: getRandomInt(0, 4)
+  })
   const x = getRandomInt(0, boardWidth - shape[0].length)
   return {
     x,
@@ -67,4 +70,13 @@ export function solidifyPiece ({
     })
   })
   return board
+}
+
+export function rotateShape ({
+  shape,
+  steps
+}: { shape: Shape, steps: number }): Shape {
+  let result = shape
+  for (let i = 0; i < steps; i++) result = shape[0].map((_, index) => shape.map(row => row[index]).reverse())
+  return result
 }
