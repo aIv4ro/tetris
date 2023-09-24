@@ -3,7 +3,7 @@ import { boardWidth, boardHeight } from './constants/constants'
 import { useTetris } from './hooks/useTetris'
 
 function App () {
-  const { board, isOver, restartGame, score } = useTetris()
+  const { board, isOver, restartGame, score, level } = useTetris()
 
   return (
     <>
@@ -31,7 +31,7 @@ function App () {
           </div>
           <div className='flex flex-col px-5'>
             <h4 className='text-lg font-semibold'>Score: {score}</h4>
-
+            <h4 className='text-lg font-semibold'>Level: {level}</h4>
           </div>
         </div>
       </main>

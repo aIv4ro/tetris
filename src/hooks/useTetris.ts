@@ -11,7 +11,7 @@ export function useTetris () {
   const [piece, setPiece] = useState<Piece | null>(initialPiece)
   const [score, setScore] = useState(0)
   const moveCbRef = useRef<((move: Move) => void) | null>(null)
-
+  const level = Math.max(1, Math.floor(score / (40 * 4)))
   const move = useCallback((move: Move) => {
     if (piece == null) return
     const { dir } = move
@@ -76,18 +76,18 @@ export function useTetris () {
       if (e.key === 'ArrowDown') moveCbRef.current?.({ dir: 'down', steps: 1 })
       if (e.key === 'ArrowUp') moveCbRef.current?.({ dir: 'rotate' })
     }
-    const tickId = setInterval(onTick, 1000)
+    const tickId = setInterval(onTick, 1000 / level)
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       clearInterval(tickId)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [level])
 
   function restartGame () {
     setBoard(getInitialBoard())
     setPiece(getRandomPiece())
   }
 
-  return { board, isOver: piece == null, restartGame, score }
+  return { board, isOver: piece == null, restartGame, score, level }
 }
