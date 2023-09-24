@@ -51,3 +51,16 @@ export function updatePieceInBoard ({
   })
   return board
 }
+
+export function solidifyPiece ({
+  board
+}: {
+  board: Board
+}): Board {
+  board.forEach(row => {
+    row.forEach((cell, x) => {
+      if (cell === 2) row[x] = 1
+    })
+  })
+  return board
+}

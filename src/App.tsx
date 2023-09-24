@@ -4,18 +4,14 @@ import { useTetris } from './hooks/useTetris'
 
 function App () {
   const { board, isOver, restartGame } = useTetris()
-  console.log('render')
-  function handleRestartGame (): void {
-    restartGame()
-  }
 
   return (
     <div className='h-screen grid place-content-center'>
       <header className='flex flex-col'>
         <h1 className='text-xl text-center font-semibold'>Tetris</h1>
-        {isOver == null && <>
+        {isOver && <>
           <h4 className='text-lg text-center'>Game over</h4>
-          <button onClick={handleRestartGame} className='px-3 bg-slate-200 rounded'>Restart game</button>
+          <button onClick={restartGame} className='px-3 bg-slate-200 rounded'>Restart game</button>
         </>}
       </header>
       <div className='grid mt-3' style={{

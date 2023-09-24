@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Board, type Move, type Piece } from '../types/types'
-import { getInitialBoard, getRandomPiece, updatePieceInBoard, willCollide } from '../utils/utils'
+import { getInitialBoard, getRandomPiece, solidifyPiece, updatePieceInBoard, willCollide } from '../utils/utils'
 import { boardWidth } from '../constants/constants'
 
 const initialPiece = getRandomPiece()
@@ -9,6 +9,7 @@ const initialBoard = getInitialBoard()
 export function useTetris () {
   const [board, setBoard] = useState(initialBoard)
   const [piece, setPiece] = useState<Piece | null>(initialPiece)
+  const moveCbRef = useRef<((move: Move) => void) | null>(null)
 
   const move = useCallback((move: Move) => {
     if (piece == null) return
@@ -28,27 +29,26 @@ export function useTetris () {
         y: dir === 'down' ? piece.y + move.steps * multiplier : piece.y
       }
     }
-    if (willCollide({ piece: newPiece, board })) {
-      if (dir === 'down') {
-        const newBoard: Board = board.map(row => row.map(cell => cell === 2 ? 1 : cell))
-        for (let i = 0; i < newBoard.length; i++) {
-          const row = newBoard[i]
-          if (row.every(cell => cell === 1)) {
-            newBoard.splice(i, 1)
-            newBoard.unshift(Array(boardWidth).fill(0))
-          }
+    if (willCollide({ piece: newPiece, board }) && dir === 'down') {
+      const newBoard: Board = board.map(row => row.map(cell => cell))
+      solidifyPiece({ board: newBoard })
+      for (let i = 0; i < newBoard.length; i++) {
+        const row = newBoard[i]
+        if (row.every(cell => cell === 1)) {
+          newBoard.splice(i, 1)
+          newBoard.unshift(Array(boardWidth).fill(0))
         }
-        const nextPiece = getRandomPiece()
-        if (willCollide({ piece: nextPiece, board })) {
-          // gameOver
-          setPiece(null)
-        } else {
-          const nextPiece = getRandomPiece()
-          setPiece(nextPiece)
-          updatePieceInBoard({ piece: nextPiece, board: newBoard })
-        }
-        setBoard(newBoard)
       }
+      const nextPiece = getRandomPiece()
+      updatePieceInBoard({ piece: nextPiece, board: newBoard })
+      if (willCollide({ piece: nextPiece, board })) {
+        // gameOver
+        solidifyPiece({ board: newBoard })
+        setPiece(null)
+      } else {
+        setPiece(nextPiece)
+      }
+      setBoard(newBoard)
     } else {
       setPiece(newPiece)
       setBoard(prev => {
@@ -58,15 +58,17 @@ export function useTetris () {
     }
   }, [piece, board])
 
+  moveCbRef.current = move
+
   useEffect(() => {
     function onTick () {
-      move({ dir: 'down', steps: 1 })
+      moveCbRef.current?.({ dir: 'down', steps: 1 })
     }
     function handleKeyDown (e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft') move({ dir: 'left', steps: 1 })
-      if (e.key === 'ArrowRight') move({ dir: 'right', steps: 1 })
-      if (e.key === 'ArrowDown') move({ dir: 'down', steps: 1 })
-      if (e.key === 'ArrowUp') move({ dir: 'rotate' })
+      if (e.key === 'ArrowLeft') moveCbRef.current?.({ dir: 'left', steps: 1 })
+      if (e.key === 'ArrowRight') moveCbRef.current?.({ dir: 'right', steps: 1 })
+      if (e.key === 'ArrowDown') moveCbRef.current?.({ dir: 'down', steps: 1 })
+      if (e.key === 'ArrowUp') moveCbRef.current?.({ dir: 'rotate' })
     }
     const tickId = setInterval(onTick, 1000)
     window.addEventListener('keydown', handleKeyDown)
@@ -74,7 +76,7 @@ export function useTetris () {
       clearInterval(tickId)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [move])
+  }, [])
 
   function restartGame () {
     setBoard(getInitialBoard())
