@@ -3,7 +3,15 @@ import { boardWidth, boardHeight } from './constants/constants'
 import { useTetris } from './hooks/useTetris'
 
 function App () {
-  const { board, isOver, restartGame, score, level } = useTetris()
+  const {
+    board,
+    isOver,
+    score,
+    level,
+    isPaused,
+    restartGame,
+    toggleIsPaused
+  } = useTetris()
 
   return (
     <>
@@ -12,6 +20,9 @@ function App () {
           <div className='flex-col'>
             <header className='flex flex-col'>
               <h1 className='text-xl text-center font-semibold'>Tetris</h1>
+              <button onClick={toggleIsPaused}>
+                {isPaused ? 'Resume' : 'Stop'}
+              </button>
             </header>
             <div className='grid mt-3' style={{
               gridTemplateRows: `repeat(${boardHeight}, 22px)`,

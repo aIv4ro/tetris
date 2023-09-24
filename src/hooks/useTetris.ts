@@ -8,6 +8,7 @@ const initialBoard = getInitialBoard()
 
 export function useTetris () {
   const [board, setBoard] = useState(initialBoard)
+  const [isPaused, setIsPaused] = useState(true)
   const [piece, setPiece] = useState<Piece | null>(initialPiece)
   const [score, setScore] = useState(0)
   const moveCbRef = useRef<((move: Move) => void) | null>(null)
@@ -67,6 +68,7 @@ export function useTetris () {
   moveCbRef.current = move
 
   useEffect(() => {
+    if (isPaused) return
     function onTick () {
       moveCbRef.current?.({ dir: 'down', steps: 1 })
     }
@@ -82,12 +84,16 @@ export function useTetris () {
       clearInterval(tickId)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [level])
+  }, [level, isPaused])
 
   function restartGame () {
     setBoard(getInitialBoard())
     setPiece(getRandomPiece())
   }
 
-  return { board, isOver: piece == null, restartGame, score, level }
+  function toggleIsPaused () {
+    setIsPaused(prev => !prev)
+  }
+
+  return { board, isOver: piece == null, score, level, isPaused, restartGame, toggleIsPaused }
 }
